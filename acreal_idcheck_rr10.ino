@@ -110,8 +110,8 @@ void loop()
           for(int i=0;i<8;i++) {
              uid[i] = rfidp[11-i];
           }
-          Serial.print("uid length: ");
-          Serial.println(uidlen);
+          // Serial.print("uid length: ");
+          // Serial.println(uidlen);
 
           Serial.print("uid: ");
           Serial.println(printhex(uid, uidlen));

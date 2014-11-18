@@ -23,6 +23,10 @@ byte iso15693_null[5] = { 0x05, 0x06, 0x00, 0x0B, 0x00 };
 byte null_response[9];
 boolean received = false;
 
+// sipHash
+unsigned char key[] = { 0xe8, 0x0b, 0x6e, 0x3a, 0x12, 0x11, 0x40, 0x57,
+                        0x7c, 0x7b, 0xea, 0x17, 0x64, 0x08, 0xe8, 0x6e };
+
 void setup()
 {
   Serial.begin(9600);
@@ -58,9 +62,8 @@ void loop()
         // Serial.println(uidlen);
 
         byte sip_uid[8];
-        unsigned char key[] PROGMEM = { 0xe8, 0x0b, 0x6e, 0x3a, 0x12, 0x11, 0x40, 0x57,
-                                    0x7c, 0x7b, 0xea, 0x17, 0x64, 0x08, 0xe8, 0x6e };
-        sipHash.initFromPROGMEM(key);
+        
+        sipHash.initFromRAM(key);
         for(int i=0;i<uidlen;i++)
         {
           uid[i] = rfidp[12+i];
@@ -188,6 +191,17 @@ boolean cmdUpdate() {
       if(rf_i < rfidp[0]) { //response not fully received yet
         break;
       } 
+      { //compute checksum
+        word chksm=0;
+        for(int i=0;i<rfidp[0]-2;i++)
+          chksm += rfidp[i];
+    
+        if(chksm != ((((word)rfidp[rfidp[0]-1])<<8) + rfidp[rfidp[0]-2]) ) //if checksum mismatch
+        {
+          comstatus = 0; //let's try again from the beginning
+          break;
+        }
+      }
 
       boolean empty = true;
       for (int i=0; i < rfidp[0]; i++) {
